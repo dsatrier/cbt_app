@@ -4,6 +4,8 @@ import 'package:test_drive/pages/second_page.dart';
 import 'package:test_drive/pages/third_page.dart';
 import 'package:test_drive/pages/fourth_page.dart';
 import 'package:test_drive/pages/reflection_page.dart';
+import 'package:test_drive/pages/stats_page.dart';
+import 'package:test_drive/utils/content_data.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,80 +23,33 @@ class _FirstPageState extends State<FirstPage> {
   String _userName = 'User';
   DateTime? lastCompletedDate;
   String? lastCheckDate;
-  
-  // Different content for each day (35 days of content - 5 weeks)
-  final List<Map<String, String>> dailyContent = [
-    // Week 1
-    {"reading": "5 Tips to Improve Sleep", "assessment": "Sleep Quality Assessment", "day": "1"},
-    {"reading": "Understanding Sleep Cycles", "assessment": "Bedtime Routine Check", "day": "2"},
-    {"reading": "Creating a Sleep Environment", "assessment": "Bedroom Assessment", "day": "3"},
-    {"reading": "Managing Screen Time", "assessment": "Technology Usage Review", "day": "4"},
-    {"reading": "Relaxation Techniques", "assessment": "Stress Level Check", "day": "5"},
-    {"reading": "Diet and Sleep Connection", "assessment": "Nutrition Assessment", "day": "6"},
-    {"reading": "Exercise for Better Sleep", "assessment": "Activity Level Review", "day": "7"},
-    
-    // Week 2
-    {"reading": "Sleep Hygiene Fundamentals", "assessment": "Morning Energy Assessment", "day": "8"},
-    {"reading": "The Power of Consistency", "assessment": "Schedule Consistency Check", "day": "9"},
-    {"reading": "Dealing with Insomnia", "assessment": "Sleep Latency Assessment", "day": "10"},
-    {"reading": "Napping Strategies", "assessment": "Daytime Fatigue Review", "day": "11"},
-    {"reading": "Caffeine and Sleep", "assessment": "Caffeine Intake Assessment", "day": "12"},
-    {"reading": "Temperature and Sleep", "assessment": "Sleep Environment Check", "day": "13"},
-    {"reading": "Wind-Down Routines", "assessment": "Evening Habits Review", "day": "14"},
-    
-    // Week 3
-    {"reading": "Managing Stress for Sleep", "assessment": "Stress Management Check", "day": "15"},
-    {"reading": "Meditation Basics", "assessment": "Mindfulness Practice Review", "day": "16"},
-    {"reading": "Progressive Muscle Relaxation", "assessment": "Relaxation Progress Check", "day": "17"},
-    {"reading": "Breathing Exercises", "assessment": "Breathing Practice Assessment", "day": "18"},
-    {"reading": "Sleep Disorders Overview", "assessment": "Sleep Pattern Analysis", "day": "19"},
-    {"reading": "When to Seek Help", "assessment": "Sleep Health Evaluation", "day": "20"},
-    {"reading": "Building Better Habits", "assessment": "Habit Formation Check", "day": "21"},
-    
-    // Week 4
-    {"reading": "Advanced Sleep Strategies", "assessment": "Weekly Progress Assessment", "day": "22"},
-    {"reading": "Cognitive Techniques", "assessment": "Mental Health Check", "day": "23"},
-    {"reading": "Sleep and Productivity", "assessment": "Performance Review", "day": "24"},
-    {"reading": "Social Life and Sleep", "assessment": "Lifestyle Balance Check", "day": "25"},
-    {"reading": "Travel and Sleep", "assessment": "Adaptability Assessment", "day": "26"},
-    {"reading": "Seasonal Changes", "assessment": "Environmental Factors Review", "day": "27"},
-    {"reading": "Long-term Maintenance", "assessment": "Sustainability Check", "day": "28"},
-    
-    // Week 5
-    {"reading": "Long-term Sleep Health", "assessment": "Comprehensive Review", "day": "29"},
-    {"reading": "Sleep Across Lifespan", "assessment": "Life Stage Assessment", "day": "30"},
-    {"reading": "Optimizing Recovery", "assessment": "Recovery Quality Check", "day": "31"},
-    {"reading": "Sleep and Immunity", "assessment": "Health Impact Review", "day": "32"},
-    {"reading": "Future Planning", "assessment": "Goal Setting Assessment", "day": "33"},
-    {"reading": "Celebrating Progress", "assessment": "Achievement Review", "day": "34"},
-    {"reading": "Continuing the Journey", "assessment": "Habit Consolidation Check", "day": "35"},
-  ];
 
-  late List<String> options;
   final Set<String> selectedOptions = {};
+  List<String> options = [];
+  String currentDayKey = '';
   bool isExpanded = false;
-  String currentDayKey = "1";
+  int selectedWeek = 1;
+  int selectedDay = 1;
 
   @override
   void initState() {
     super.initState();
-    _loadStreakData(); 
+    _loadStreakData();
   }
 
   Future<void> _loadStreakData() async {
     final prefs = await SharedPreferences.getInstance();
-    
-    // 1. Load initial data
+
     currentStreak = prefs.getInt('currentStreak') ?? 0;
     totalDaysCompleted = prefs.getInt('totalDaysCompleted') ?? 0;
     lastCheckDate = prefs.getString('lastCheckDate');
     _userName = prefs.getString('userName') ?? 'User';
-    
+
     final lastDateString = prefs.getString('lastCompletedDate');
     if (lastDateString != null) {
       lastCompletedDate = DateTime.parse(lastDateString);
     }
-    
+
     // 2. Check for new day and clear tasks (must happen BEFORE content is set)
     await _checkAndResetForNewDay(prefs);
 
@@ -114,26 +69,33 @@ class _FirstPageState extends State<FirstPage> {
     
     if (lastCheckDate != today) {
       // New day detected. Check if the previous day's tasks were completed.
-      final savedOptions = prefs.getStringList('selectedOptions') ?? [];
-      final wasCompleted = savedOptions.length == 3;
+      // The previous "current" day number is totalDaysCompleted + 1
+      final prevDayNumber = totalDaysCompleted + 1;
+      final prevKey = prevDayNumber.toString();
+      final savedOptions = prefs.getStringList('selectedOptions_' + prevKey) ?? [];
+      final wasCompleted = prefs.getBool(_prefsCompletedKey(prevKey)) ?? (savedOptions.length == 3);
       
       // Store the completion status temporarily for _advanceStreakOnNewDay
       await prefs.setBool('wasPreviousDayCompleted', wasCompleted);
       
-      // Reset tasks for the new day
+      // Reset in-memory tasks for the new (selected) day; actual per-day saved data remains in prefs
       selectedOptions.clear();
       lastCheckDate = today;
       await prefs.setString('lastCheckDate', today);
-      await prefs.remove('selectedOptions'); // Crucial: removes the saved list
+      // leave per-day stored selectedOptions_<day> entries intact; we only remove the global old key if present
+      await prefs.remove('selectedOptions');
       
     } else {
       // Same day, load previous progress
-      final savedOptions = prefs.getStringList('selectedOptions') ?? [];
-      selectedOptions.addAll(savedOptions);
+      // We'll load the per-day selected options later once currentDayKey has been set
+      // (no-op here)
       // Ensure the temporary flag is clear if it's not a new day
       await prefs.remove('wasPreviousDayCompleted');
     }
   }
+
+  String _prefsSelectedOptionsKey(String dayKey) => 'selectedOptions_' + dayKey;
+  String _prefsCompletedKey(String dayKey) => 'completed_' + dayKey;
 
   // Checks the flag and advances streak/content only on a new day
   Future<void> _advanceStreakOnNewDay(SharedPreferences prefs) async {
@@ -167,16 +129,27 @@ class _FirstPageState extends State<FirstPage> {
 
   // Sets the Reading and Assessment content based on the total days completed
   void _setTodaysContent() {
-    final dayIndex = totalDaysCompleted % dailyContent.length;
-    final todayContent = dailyContent[dayIndex];
+    // Calculate which week and day we're on
+    final week = (totalDaysCompleted ~/ 7) + 1;
+    final dayInWeek = (totalDaysCompleted % 7) + 1;
     
-    currentDayKey = todayContent["day"]!;
+    selectedWeek = week;
+    selectedDay = dayInWeek;
     
-    options = [
-      "Read: ${todayContent["reading"]!}",
-      todayContent["assessment"]!,
-      "Reflection Tracker",
-    ];
+    // Get content from ContentData
+    final weekContent = ContentData.getWeekContent(week);
+    if (weekContent.isNotEmpty && dayInWeek <= weekContent.length) {
+      final todayContent = weekContent[dayInWeek - 1];
+      currentDayKey = todayContent["day"]!;
+      
+      options = [
+        "Read: ${todayContent["reading"]!}",
+        todayContent["assessment"]!,
+        "Reflection Tracker",
+      ];
+      // Load saved selections for this specific day
+      _loadSelectedOptionsForCurrentDay();
+    }
   }
 
   void _checkStreakValidity() {
@@ -211,8 +184,10 @@ class _FirstPageState extends State<FirstPage> {
     final prefs = prefsInstance ?? await SharedPreferences.getInstance();
     await prefs.setInt('currentStreak', currentStreak);
     await prefs.setInt('totalDaysCompleted', totalDaysCompleted);
-    // Saves the current selectedOptions list (full if just completed, empty if advanced)
-    await prefs.setStringList('selectedOptions', selectedOptions.toList()); 
+    // Save selected options per-day (keyed by currentDayKey)
+    if (currentDayKey.isNotEmpty) {
+      await prefs.setStringList(_prefsSelectedOptionsKey(currentDayKey), selectedOptions.toList());
+    }
     
     if (lastCompletedDate != null) {
       await prefs.setString('lastCompletedDate', lastCompletedDate!.toIso8601String());
@@ -223,38 +198,15 @@ class _FirstPageState extends State<FirstPage> {
     }
   }
 
-  // Only updates streak and completion date, does NOT advance content
-  Future<void> _performStreakAdvancement() async {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Only update local variables to be saved
-      currentStreak++;
-      totalDaysCompleted++;
-      lastCompletedDate = DateTime.now();
-      
-      // Save the state (including the now-full selectedOptions)
-      await _saveStreakData(prefs); 
-      
-      // Now update the UI to show 3/3 and the dialog
-      setState(() {});
-      _showCompletionDialog();
-  }
-
-  // Triggers advancement and saves completion flag
-  void _checkDayCompletion() async {
-    // Only proceed if all tasks are completed
-    if (selectedOptions.length == options.length) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      
-      // Only run the advancement logic once per day
-      if (lastCompletedDate == null || 
-          DateTime(lastCompletedDate!.year, lastCompletedDate!.month, lastCompletedDate!.day)
-              .isBefore(today)) {
-        
-        await _performStreakAdvancement(); 
-      }
-    }
+  // Load per-day selected options into memory for the currentDayKey
+  Future<void> _loadSelectedOptionsForCurrentDay() async {
+    if (currentDayKey.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList(_prefsSelectedOptionsKey(currentDayKey)) ?? [];
+    setState(() {
+      selectedOptions.clear();
+      selectedOptions.addAll(saved);
+    });
   }
 
   void _showCompletionDialog() {
@@ -328,7 +280,16 @@ class _FirstPageState extends State<FirstPage> {
     final verticalSpacing = screenHeight * 0.05;
     const horizontalPadding = 20.0;
 
-    final progressPercent = options.isEmpty ? 0.0 : selectedOptions.length / options.length;
+    // Calculate overall program progress (days completed out of total days)
+    final totalDaysInProgram = ContentData.getTotalDays();
+    // Include fractional progress for the current day's completed tasks so the ring
+    // advances as the user checks off today's plan items.
+    final dayFraction = options.isEmpty ? 0.0 : (selectedOptions.length / options.length);
+    double progressPercent = totalDaysInProgram == 0
+      ? 0.0
+      : (totalDaysCompleted + dayFraction) / totalDaysInProgram;
+    if (progressPercent > 1.0) progressPercent = 1.0;
+    
     // Use totalDaysCompleted for correct content tracking
     final currentWeek = (totalDaysCompleted ~/ 7) + 1; 
     final currentDay = (totalDaysCompleted % 7) + 1;
@@ -341,6 +302,7 @@ class _FirstPageState extends State<FirstPage> {
             children: [
               SizedBox(height: verticalSpacing),
 
+              // HEADER: Hello + Progress + Dropdowns
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Container(
@@ -349,57 +311,124 @@ class _FirstPageState extends State<FirstPage> {
                     color: const Color(0xFFEBEAE2),
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Hello $_userName!",
-                              style: GoogleFonts.poppins(
-                                textStyle: Theme.of(context).textTheme.headlineLarge,
-                              ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Hello $_userName!",
+                                  style: GoogleFonts.poppins(
+                                    textStyle: Theme.of(context).textTheme.headlineLarge,
+                                  ),
+                                ),
+                                Text(
+                                  "Week $currentWeek • Day $currentDay",
+                                  style: GoogleFonts.poppins(
+                                    textStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(color: Colors.grey[700]),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Everyday you show up counts.",
+                                  style: GoogleFonts.poppins(
+                                    textStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                  softWrap: true,
+                                ),
+                              ],
                             ),
-                            Text(
-                              "Week $currentWeek • Day $currentDay",
-                              style: GoogleFonts.poppins(
-                                textStyle: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(color: Colors.grey[700]),
-                              ),
+                          ),
+                          CircularPercentIndicator(
+                            radius: 70.0,
+                            lineWidth: 10.0,
+                            percent: progressPercent,
+                            animation: true,
+                            animationDuration: 1200,
+                            circularStrokeCap: CircularStrokeCap.round,
+                            progressColor: const Color(0xFF93679D),
+                            backgroundColor: const Color(0xFFDFDFDF),
+                            center: Text(
+                              "${(progressPercent * 100).toInt()}%",
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "Everyday you show up counts.",
-                              style: GoogleFonts.poppins(
-                                textStyle: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(color: Colors.grey[600]),
-                              ),
-                              softWrap: true,
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      CircularPercentIndicator(
-                        radius: 70.0,
-                        lineWidth: 10.0,
-                        percent: progressPercent,
-                        animation: true,
-                        animationDuration: 1200,
-                        circularStrokeCap: CircularStrokeCap.round,
-                        progressColor: const Color(0xFF93679D),
-                        backgroundColor: const Color(0xFFDFDFDF),
-                        center: Text(
-                          "${(progressPercent * 100).toInt()}%",
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                      const SizedBox(height: 16),
+                      // Week / Day selector dropdowns
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: DropdownButton<int>(
+                                isExpanded: true,
+                                value: selectedWeek,
+                                underline: const SizedBox.shrink(),
+                                items: List.generate(7, (i) => i + 1)
+                                    .map((w) => DropdownMenuItem(value: w, child: Text('Week $w', style: GoogleFonts.poppins())))
+                                    .toList(),
+                                onChanged: (val) async {
+                                  if (val == null) return;
+                                  setState(() {
+                                    selectedWeek = val;
+                                    selectedDay = selectedDay.clamp(1, 7);
+                                    totalDaysCompleted = (selectedWeek - 1) * 7 + (selectedDay - 1);
+                                    _setTodaysContent();
+                                  });
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await _saveStreakData(prefs);
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: DropdownButton<int>(
+                                isExpanded: true,
+                                value: selectedDay,
+                                underline: const SizedBox.shrink(),
+                                items: List.generate(7, (i) => i + 1)
+                                    .map((d) => DropdownMenuItem(value: d, child: Text('Day $d', style: GoogleFonts.poppins())))
+                                    .toList(),
+                                onChanged: (val) async {
+                                  if (val == null) return;
+                                  setState(() {
+                                    selectedDay = val;
+                                    totalDaysCompleted = (selectedWeek - 1) * 7 + (selectedDay - 1);
+                                    _setTodaysContent();
+                                  });
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await _saveStreakData(prefs);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -408,6 +437,7 @@ class _FirstPageState extends State<FirstPage> {
 
               SizedBox(height: verticalSpacing * 0.6),
 
+              // Streak indicator
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Container(
@@ -443,30 +473,38 @@ class _FirstPageState extends State<FirstPage> {
 
               SizedBox(height: verticalSpacing),
 
+              // SECTION 1: Today's Plan
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Today's Plan",
-                            style: GoogleFonts.poppins(
-                              textStyle: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                          ),
-                        ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Today's Plan",
+                      style: GoogleFonts.poppins(
+                        textStyle: Theme.of(context).textTheme.headlineMedium,
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      ContentData.getWeekTitle(selectedWeek),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
+              SizedBox(height: 12),
+
+              // Tiny Habits card
+
+              SizedBox(height: 12),
+
+              // Tiny Habits card
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Container(
@@ -500,7 +538,7 @@ class _FirstPageState extends State<FirstPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                "Tiny Habits",
+                                ContentData.getWeekTitle(selectedWeek),
                                 style: GoogleFonts.poppins(
                                   textStyle: Theme.of(context)
                                       .textTheme
@@ -534,37 +572,42 @@ class _FirstPageState extends State<FirstPage> {
                               ),
                               value: selectedOptions.contains(option),
                               onChanged: (bool? checked) async {
+                                final prefs = await SharedPreferences.getInstance();
                                 if (checked == false) {
                                   setState(() {
                                     selectedOptions.remove(option);
                                   });
-                                  await _saveStreakData();
+                                  // Save per-day selections and clear completed flag for this day
+                                  if (currentDayKey.isNotEmpty) {
+                                    await prefs.setStringList(_prefsSelectedOptionsKey(currentDayKey), selectedOptions.toList());
+                                    await prefs.setBool(_prefsCompletedKey(currentDayKey), false);
+                                  }
                                   return;
                                 }
 
                                 Widget? destinationPage;
 
-                                // Replace the switch statement section (around line 485-510) with this:
-
                                 switch (index) {
                                   case 0: // Reading material (changes daily)
-                                    final dayIndex = totalDaysCompleted % dailyContent.length;
-                                    final todayContent = dailyContent[dayIndex];
-                                    destinationPage = SecondPage(
-                                      dayNumber: currentDayKey,
-                                      title: todayContent["reading"]!,
-                                    );
+                                    final todayContent = ContentData.getContentForDay(totalDaysCompleted + 1);
+                                    if (todayContent != null) {
+                                      destinationPage = SecondPage(
+                                        dayNumber: currentDayKey,
+                                        title: todayContent["reading"] ?? 'Reading Material',
+                                      );
+                                    }
                                     break;
                                   case 1: // Assessment (changes daily)
-                                    final dayIndex = totalDaysCompleted % dailyContent.length;
-                                    final todayContent = dailyContent[dayIndex];
-                                    destinationPage = ThirdPage(
-                                      dayNumber: currentDayKey,
-                                      title: todayContent["assessment"]!,
-                                    );
+                                    final todayContent = ContentData.getContentForDay(totalDaysCompleted + 1);
+                                    if (todayContent != null) {
+                                      destinationPage = ThirdPage(
+                                        dayNumber: currentDayKey,
+                                        title: todayContent["assessment"] ?? 'Assessment',
+                                      );
+                                    }
                                     break;
                                   case 2: // Reflection Tracker (stays same)
-                                    destinationPage = const ReflectionPage();  // Changed from ReflectionsTracker()
+                                    destinationPage = const ReflectionPage();
                                     break;
                                 }
 
@@ -579,9 +622,21 @@ class _FirstPageState extends State<FirstPage> {
                                   setState(() {
                                     selectedOptions.add(option);
                                   });
-                                  
-                                  await _saveStreakData();
-                                  _checkDayCompletion(); 
+
+                                  // Save per-day selections
+                                  if (currentDayKey.isNotEmpty) {
+                                    await prefs.setStringList(_prefsSelectedOptionsKey(currentDayKey), selectedOptions.toList());
+                                  }
+
+                                  // If all tasks for this day are completed, and we haven't shown completion yet, show it and mark completed
+                                  if (selectedOptions.length == options.length && currentDayKey.isNotEmpty) {
+                                    final alreadyCompleted = prefs.getBool(_prefsCompletedKey(currentDayKey)) ?? false;
+                                    if (!alreadyCompleted) {
+                                      await prefs.setBool(_prefsCompletedKey(currentDayKey), true);
+                                      // show the completion dialog (does not advance streak here; that still happens on new day rollover)
+                                      _showCompletionDialog();
+                                    }
+                                  }
                                 }
                               },
                             );
@@ -594,12 +649,24 @@ class _FirstPageState extends State<FirstPage> {
 
               SizedBox(height: verticalSpacing),
 
+              // SECTION 2: Sleep Stats
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-                // WRAPPING THE ENTIRE CARD WITH INKWELL
+                child: Text(
+                  "Sleep Stats",
+                  style: GoogleFonts.poppins(
+                    textStyle: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 12),
+
+              // Log Sleep Diary card
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: InkWell( 
                   onTap: () {
-                    // Navigate to the FourthPage when the card is tapped
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -607,7 +674,7 @@ class _FirstPageState extends State<FirstPage> {
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(20), // Match container's border radius
+                  borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
@@ -656,6 +723,68 @@ class _FirstPageState extends State<FirstPage> {
                   ),
                 ),
               ),
+
+              SizedBox(height: 12),
+
+              // Sleep Analytics card
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StatsPage(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFA995AE),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    width: double.infinity,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "Sleep Analytics",
+                                style: GoogleFonts.poppins(
+                                  textStyle: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "View your sleep trends.",
+                                style: GoogleFonts.poppins(
+                                  textStyle: Theme.of(context)
+                                      .textTheme
+                                      .labelLarge
+                                      ?.copyWith(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.show_chart, color: Colors.white, size: 70),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: verticalSpacing),
             ],
           ),
         ),

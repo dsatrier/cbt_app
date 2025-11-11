@@ -184,7 +184,7 @@ class _FourthPageState extends State<FourthPage> {
             backgroundColor: primaryColor,
           ),
         );
-        Navigator.pop(context); // Go back to FirstPage after saving
+        Navigator.pop(context, true); // Go back to FirstPage after saving (return true)
       });
     }
   }
@@ -205,7 +205,6 @@ class _FourthPageState extends State<FourthPage> {
     }
   }
 
-  // --- Widget Builders ---
   Widget _buildInputWidget() {
     // Check for time-based questions
     if (currentStep == 0 || currentStep == 2) {
@@ -258,6 +257,54 @@ class _FourthPageState extends State<FourthPage> {
         hintText: currentStep == 6 ? "Enter your thoughts here..." : "Type your answer...",
         hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
       ),
+    );
+  }
+
+  // Helper: map quality (string) to a color used in the entry badge
+  Color _getQualityColor(String quality) {
+    final q = int.tryParse(quality) ?? 0;
+    switch (q) {
+      case 1:
+        return Colors.red.shade700;
+      case 2:
+        return Colors.orange.shade700;
+      case 3:
+        return Colors.amber.shade700;
+      case 4:
+        return Colors.green.shade700;
+      case 5:
+        return Colors.teal.shade700;
+      default:
+        return Colors.grey.shade600;
+    }
+  }
+
+  // Helper: small labeled row used inside each diary entry card
+  Widget _buildEntryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: primaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -424,40 +471,160 @@ class _FourthPageState extends State<FourthPage> {
             else
               _buildDiaryContent(),
 
-            // --- CSV Output Section ---
+            // --- Past Entries Section ---
             const SizedBox(height: 50),
             Text(
-              "Past Entries (CSV Format)",
+              "Past Sleep Entries",
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: primaryColor,
               ),
             ),
-            const SizedBox(height: 10),
-            
-            // Display the CSV header
-            Text(
-              "Date,Go to Bed,Sleep Latency,Wake Up,Awakenings,Quality,Stimulants,Reflections",
-              style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-            
-            // Display each entry
-            ...diaryEntries.reversed.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  entry.values.join(','),
-                  style: GoogleFonts.poppins(fontSize: 12),
-                ),
-              );
-            }).toList(),
+            const SizedBox(height: 15),
 
             if (diaryEntries.isEmpty && !isLoading)
-              Text(
-                "No sleep entries logged yet.",
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
-              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 30),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.note_outlined, color: Colors.grey[400], size: 50),
+                      const SizedBox(height: 15),
+                      Text(
+                        "No sleep entries logged yet.",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              // Display each entry as a card
+              ...diaryEntries.reversed.map((entry) {
+                final String date = entry["Date"] ?? "Unknown";
+                final String bedTime = entry["Go to Bed"] ?? "-";
+                final String latency = entry["Sleep Latency"] ?? "-";
+                final String wakeTime = entry["Wake Up"] ?? "-";
+                final String awakenings = entry["Awakenings"] ?? "-";
+                final String quality = entry["Quality"] ?? "-";
+                final String stimulants = entry["Stimulants"] ?? "-";
+                final String reflections = entry["Reflections"] ?? "";
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.15),
+                          spreadRadius: 1,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        dividerColor: Colors.transparent,
+                      ),
+                      child: ExpansionTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              date,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: _getQualityColor(quality).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "Quality: $quality/5",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _getQualityColor(quality),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            "Bed: $bedTime • Woke: $wakeTime",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildEntryRow("Sleep Latency", "$latency min"),
+                                const SizedBox(height: 12),
+                                _buildEntryRow("Awakenings", awakenings),
+                                const SizedBox(height: 12),
+                                _buildEntryRow("Stimulants", stimulants),
+                                if (reflections.isNotEmpty) ...[
+                                  const SizedBox(height: 16),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Reflections",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: backgroundColor,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          reflections,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            color: Colors.grey[700],
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
           ],
         ),
       ),
