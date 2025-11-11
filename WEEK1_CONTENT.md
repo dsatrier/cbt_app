@@ -335,17 +335,6 @@ SplashScreen → LoginPage → OnboardingForm → FirstPage (Dashboard)
 | 6 | Advanced Strategies | Relaxation, imagery, parasympathetic activation | 36-42 |
 | 7 | Relapse Prevention | Trigger ID, recovery protocols, long-term maintenance | 43-49 |
 
-## Next Steps & Checklist
-
-- ✅ All 49 days' article content in `ArticleData`
-- ✅ All 49 days' quizzes in `QuizData` (5 questions each)
-- ✅ Content mapping in `ContentData`
-- ✅ SecondPage wired to `ArticleData`
-- ✅ ThirdPage wired to `QuizData`
-- ✅ FirstPage dynamic title using `ContentData`
-- ✅ FourthPage sleep diary with past-entry UI improvements
-- ✅ Per-day Tiny Habits completion tracking & persistence
-- ✅ Streak counter with day-rollover advancement
 - 📋 Future: Quiz completion auto-marks Tiny Habits; mobile app release; analytics dashboard
 
 ## Development Notes
@@ -366,7 +355,4 @@ SplashScreen → LoginPage → OnboardingForm → FirstPage (Dashboard)
 ---
 
 **Last Updated:** November 12, 2025  
-**Program Status:** Production-Ready  
 **Total Content Days:** 49 (7 weeks)  
-**Supported Platforms:** Web, Android, iOS
-
