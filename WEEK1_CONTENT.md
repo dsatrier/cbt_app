@@ -1,7 +1,9 @@
-# CBT Sleep Program Content: Weeks 1-3
+# CBT Sleep Program Content: Weeks 1-7 (49-Day Comprehensive Guide)
 
 ## Overview
-A comprehensive 21-day cognitive-behavioral therapy program for improving sleep quality through habit formation, circadian rhythm anchoring, and stimulus control.
+A comprehensive 49-day cognitive-behavioral therapy (CBT-I) program for improving sleep quality. The program progressively builds foundational sleep habits, anchors circadian rhythm, applies stimulus control techniques, and integrates advanced cognitive and behavioral strategies for sustained sleep improvement.
+
+**Program Philosophy:** Small, consistent changes compound into lasting sleep improvement through evidence-based CBT-I interventions.
 
 ---
 
@@ -107,30 +109,264 @@ Focus on rebuilding the bed-sleep association and removing sleep-disruptive beha
 
 ---
 
-## Implementation Files
+# Week 4: Cognitive Interventions
 
-- **Daily Content Mapping:** `lib/pages/first_page.dart` → `dailyContent` (49 days total)
-- **Quiz Data:** `lib/utils/quiz_data.dart` → 21 quizzes with 5 questions each
-- **Article Content:** `lib/assets/articles/` (to be populated with markdown files)
+Focus on identifying and restructuring unhelpful sleep-related thoughts and worries.
 
-## Quiz Structure
-- **Format:** 5 multiple-choice questions per day (A-D options)
-- **Total Questions:** 105 (21 days × 5 questions)
-- **Difficulty:** Progressive, building on previous concepts
-- **Coverage:** Knowledge, application, and reflection
+### Day 22: Your Sleep Story
+- Key Habits: Sleep narrative awareness, identifying patterns
+- Quiz: Sleep Beliefs Inventory
 
-## Next Steps
+### Day 23: Worry Spotting 101
+- Key Habits: Recognizing racing thoughts, distinguishing worry from insomnia
+- Quiz: Worry Recognition Quiz
 
-1. ✅ Create markdown article files for Days 1-21
-2. ✅ Populate QuizData with Days 1-21 quizzes
-3. ⏳ Update `SecondPage` to display article content
-4. ⏳ Update `ThirdPage` to display quizzes from QuizData
-5. ⏳ Add Weeks 4-7 content (Days 22-49)
-6. ⏳ Wire quiz completion to auto-mark tasks
+### Day 24: From "I Can't Sleep" to "I'm Learning"
+- Key Habits: Thought reframing, growth mindset
+- Quiz: Reframing Practice Quiz
 
-## Notes
-- Week 1 emphasizes **behavior foundation** (light, screens, caffeine, timing)
-- Week 2 emphasizes **circadian anchoring** (wake time consistency, morning light)
-- Week 3 emphasizes **stimulus control** (bed-sleep association, phone separation)
-- Philosophy: Small, consistent changes compound into lasting sleep improvement
+### Day 25: The "What If" Trap
+- Key Habits: Catastrophizing identification, probability assessment
+- Quiz: Thought Pattern Analysis
+
+### Day 26: Sleep Debt & Tomorrow Thinking
+- Key Habits: Decoupling sleep debt from anxiety, present-focus
+- Quiz: Sleep Debt Awareness Check
+
+### Day 27: Worry Time Container
+- Key Habits: Worry scheduling, mental compartmentalization
+- Quiz: Cognitive Flexibility Quiz
+
+### Day 28: Week in Review — Rewiring Thoughts
+- Reflection: Thought pattern changes, confidence building
+- Quiz: Week 4 Reflection Quiz
+
+---
+
+# Week 5: Sleep Restriction & Consolidation
+
+Focus on optimizing sleep-wake schedules and consolidating sleep through graduated sleep restriction.
+
+### Day 29: Sleep Window Basics
+- Key Habits: Understanding sleep efficiency, time-in-bed targeting
+- Quiz: Sleep Architecture Fundamentals
+
+### Day 30: Find Your Baseline
+- Key Habits: Sleep diary analysis, identifying true sleep need
+- Quiz: Sleep Need Assessment
+
+### Day 31: The Sleep Consolidation Strategy
+- Key Habits: Graduated sleep restriction, compression timing
+- Quiz: Sleep Consolidation Mechanics
+
+### Day 32: Managing Early Morning Wakings
+- Key Habits: Terminal insomnia intervention, light timing
+- Quiz: Early Wake Management
+
+### Day 33: Afternoon Energy & Evening Readiness
+- Key Habits: Strategic napping restrictions, energy pacing
+- Quiz: Daytime Alertness Strategies
+
+### Day 34: Track & Adjust
+- Key Habits: Sleep log interpretation, dose adjustment
+- Quiz: Data-Driven Sleep Optimization
+
+### Day 35: Week in Review — Sleep Efficiency Progress
+- Reflection: Consolidation gains, sustained practice
+- Quiz: Week 5 Reflection Quiz
+
+---
+
+# Week 6: Advanced Behavioral Strategies
+
+Focus on relaxation, body awareness, and integrating CBT-I techniques into daily life.
+
+### Day 36: Progressive Muscle Relaxation
+- Key Habits: Somatic awareness, tension release
+- Quiz: Relaxation Technique Mastery
+
+### Day 37: Breathing & Parasympathetic Activation
+- Key Habits: Box breathing, diaphragmatic techniques
+- Quiz: Autonomic Nervous System Awareness
+
+### Day 38: Visualization & Mental Imagery
+- Key Habits: Guided imagery, constructive daydreaming
+- Quiz: Imagery Effectiveness Check
+
+### Day 39: The Pre-Sleep Routine Protocol
+- Key Habits: 30-minute wind-down, consistency building
+- Quiz: Evening Routine Optimization
+
+### Day 40: Weekend Sleep Consistency
+- Key Habits: Minimizing social jet lag, weekend anchor
+- Quiz: Social Jet Lag Prevention
+
+### Day 41: Medication-Free Sleep Support
+- Key Habits: Sleep hygiene mastery, natural sleep promoters
+- Quiz: Sleep Hygiene Comprehensive Check
+
+### Day 42: Week in Review — Mastering Relaxation & Integration
+- Reflection: Technique adoption, personalized toolkit
+- Quiz: Week 6 Reflection Quiz
+
+---
+
+# Week 7: Relapse Prevention & Long-Term Maintenance
+
+Focus on consolidating gains, building resilience, and creating sustainable sleep practices for life.
+
+### Day 43: Identifying Your Sleep Triggers
+- Key Habits: Personal relapse triggers, early warning signs
+- Quiz: Trigger Identification & Mitigation
+
+### Day 44: Building Your Sleep Recovery Protocol
+- Key Habits: Quick intervention strategies, rapid reset techniques
+- Quiz: Recovery Strategy Readiness
+
+### Day 45: Maintaining Gains During Stress
+- Key Habits: Stress buffer techniques, sleep preservation during adversity
+- Quiz: Sleep Resilience Under Pressure
+
+### Day 46: Seasonal & Life Transition Adjustments
+- Key Habits: Adapting to daylight changes, life event preparation
+- Quiz: Adaptive Sleep Strategies
+
+### Day 47: Your Personal Sleep Playbook
+- Key Habits: Customized protocol review, go-to interventions
+- Quiz: Playbook Personalization Check
+
+### Day 48: Long-Term Sleep Mastery
+- Key Habits: Habit maintenance, booster practice schedules
+- Quiz: Sustaining Progress Assessment
+
+### Day 49: Graduation & Beyond
+- Reflection: Journey recap, commitment to sleep wellness, future planning
+- Quiz: Program Completion & Forward Planning
+
+---
+
+## Codebase Architecture & Implementation
+
+### Core Content Files
+
+1. **Article Content (`lib/utils/article_data.dart`)**
+   - Central repository for all 49 daily articles
+   - Structure per day: `header`, `subtitle`, `tips[]` (4 per day), `bottomNote`
+   - Accessed via: `ArticleData.getArticleForDay(String day)`
+   - Used by: `SecondPage` (article display page)
+
+2. **Quiz Data (`lib/utils/quiz_data.dart`)**
+   - Complete quiz inventory for all 49 days
+   - Structure per quiz: `day` (1-49), `questions[]` (5 questions per day), each question has `text`, `options[]` (A-D), `correct_answer`
+   - Accessed via: `QuizData.getQuizForDay(int day)`
+   - Used by: `ThirdPage` (assessment/quiz page)
+
+3. **Content Mapping (`lib/utils/content_data.dart`)**
+   - Centralized metadata: week titles, day descriptions, weekly themes
+   - Structure: `contentMap` keyed by day number (1-49)
+   - Used by: `FirstPage` (dashboard, week selector), other pages for context
+
+4. **Sleep Diary (`lib/pages/fourth_page.dart`)**
+   - 7-question structured data entry for sleep logs
+   - Persistent storage: `SharedPreferences` key `sleepDiaryEntries` (JSON)
+   - Features: one-log-per-day constraint, expandable past-entry cards, quality badges
+
+### Page Components
+
+| Page | File | Purpose | Data Source |
+|------|------|---------|-------------|
+| **Dashboard** | `lib/pages/first_page.dart` | Week selector, Tiny Habits tracker, streak counter, daily overview | `ContentData`, `SharedPreferences` (per-day state) |
+| **Article/Reading** | `lib/pages/second_page.dart` | Display selected day's article with tips, key habits, and reflections | `ArticleData` |
+| **Assessment/Quiz** | `lib/pages/third_page.dart` | Present 5-question quiz for selected day, track answers | `QuizData` |
+| **Sleep Diary** | `lib/pages/fourth_page.dart` | Sleep log entry form (7 questions), past entries display | `SharedPreferences` |
+| **Stats** | `lib/pages/stats_page.dart` | Progress visualization, streak display, habit completion tracking | `SharedPreferences` |
+
+### Navigation Flow
+
+```
+SplashScreen → LoginPage → OnboardingForm → FirstPage (Dashboard)
+                                                ↓
+                    ┌───────────────┬──────────────┬──────────┐
+                    ↓               ↓              ↓          ↓
+               SecondPage      ThirdPage     FourthPage   StatsPage
+             (Article Read)   (Quiz/Assess)  (Sleep Log) (Tracking)
+```
+
+### Data Persistence
+
+- **SharedPreferences Keys:**
+  - `currentStreak` — current sleep streak count
+  - `totalDaysCompleted` — total program days finished
+  - `lastCompletedDate` — ISO string of last completion
+  - `selectedOptions_<day>` — per-day Tiny Habits selections (JSON list)
+  - `completed_<day>` — per-day completion flag
+  - `sleepDiaryEntries` — all sleep log entries (JSON array)
+  - `userName` — user's name (from onboarding)
+
+- **Local Persistence Strategy:**
+  - Per-day state stored separately to avoid cross-day accumulation
+  - Streak advances only on calendar day rollover via `_advanceStreakOnNewDay()`
+  - Sleep diary limited to one log per calendar day
+
+### UI Patterns & Styling
+
+- **Color Palette:**
+  - Primary: `Color(0xFF93679D)` (purple)
+  - Accent: `Color(0xFFA995AE)` (light purple)
+  - Background: `Color(0xFFEBEAE2)` (beige)
+
+- **Typography:** All text uses `GoogleFonts.poppins()` for consistency
+
+- **Components:**
+  - Cards with shadow for article tips and sleep diary entries
+  - `LinearProgressIndicator` for week/day progress
+  - `ExpansionTile` for collapsible past-diary entries
+  - Material elevation and rounded corners for depth
+
+## Program Content Summary
+
+| Week | Focus | Key Techniques | Days |
+|------|-------|----------------|------|
+| 1 | Foundation | Light management, screen boundaries, caffeine, timing | 1-7 |
+| 2 | Circadian Anchoring | Consistent wake time, morning light, routine | 8-14 |
+| 3 | Stimulus Control | Bed-sleep association, 20-min rule, wind-down | 15-21 |
+| 4 | Cognitive Interventions | Thought reframing, worry management, mindset | 22-28 |
+| 5 | Sleep Consolidation | Sleep restriction, efficiency optimization, tracking | 29-35 |
+| 6 | Advanced Strategies | Relaxation, imagery, parasympathetic activation | 36-42 |
+| 7 | Relapse Prevention | Trigger ID, recovery protocols, long-term maintenance | 43-49 |
+
+## Next Steps & Checklist
+
+- ✅ All 49 days' article content in `ArticleData`
+- ✅ All 49 days' quizzes in `QuizData` (5 questions each)
+- ✅ Content mapping in `ContentData`
+- ✅ SecondPage wired to `ArticleData`
+- ✅ ThirdPage wired to `QuizData`
+- ✅ FirstPage dynamic title using `ContentData`
+- ✅ FourthPage sleep diary with past-entry UI improvements
+- ✅ Per-day Tiny Habits completion tracking & persistence
+- ✅ Streak counter with day-rollover advancement
+- 📋 Future: Quiz completion auto-marks Tiny Habits; mobile app release; analytics dashboard
+
+## Development Notes
+
+- **File Structure:** Dart files in `lib/` organized by type (pages, utils, services)
+- **Build & Run:** `flutter run -d chrome` for web; `flutter run -d <device>` for mobile
+- **Testing:** Run `flutter test` for widget/unit tests (framework ready; tests TBD)
+- **Analyzer:** `flutter analyze` — non-breaking infos about deprecations and style; no critical errors
+- **Version Control:** Commits tracked on `master` branch; force-push used to sync local with remote origin
+
+## Resources & References
+
+- CBT-I Manual: https://www.cbti-guide.com/
+- Sleep Architecture: https://www.sleepfoundation.org/
+- Circadian Rhythm: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3119483/
+- Stimulus Control & Behavioral Sleep Medicine: https://pubmed.ncbi.nlm.nih.gov/16938065/
+
+---
+
+**Last Updated:** November 12, 2025  
+**Program Status:** Production-Ready  
+**Total Content Days:** 49 (7 weeks)  
+**Supported Platforms:** Web, Android, iOS
 
